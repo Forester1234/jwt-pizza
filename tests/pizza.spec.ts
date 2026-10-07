@@ -43,17 +43,17 @@ test('purchase with login', async ({ page }) => {
       },
       {
         id: 3,
-        title: 'Margarita',
-        image: 'pizza3.png',
-        price: 0.0014,
+        name: 'Margarita',
         description: 'Essential classic',
+        price: 0.0014,
+        image: 'pizza3.png',
       },
       {
         id: 4,
-        title: 'Crusty',
-        image: 'pizza4.png',
-        price: 0.0024,
+        name: 'Crusty',
         description: 'A dry mouthed favorite',
+        price: 0.0024,
+        image: 'pizza4.png',
       },
     ];
   });
