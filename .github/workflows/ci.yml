@@ -9,16 +9,39 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: pizza
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -prootpassword"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
     outputs:
       version: ${{ steps.set_version.outputs.version }}
     steps:
-      - name: Checkout repo
+      - name: Checkout frontend
         uses: actions/checkout@v4
+
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          repository: Forester1234/jwt-pizza-service
+          ref: main
+          path: backend
+          token: ${{ secrets.BACKEND_REPO_TOKEN || github.token }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: "22.x"
 
       - name: set version
         id: set_version
@@ -32,6 +55,61 @@ jobs:
           npm ci && npm run build
           cp dist/index.html dist/404.html
 
+      - name: Configure backend
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          FACTORY_API_KEY: ${{ secrets.FACTORY_API_KEY }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const config = {
+            jwtSecret: process.env.JWT_SECRET,
+            db: {
+              connection: {
+                host: '127.0.0.1',
+                user: 'root',
+                password: 'rootpassword',
+                database: 'pizza',
+                connectTimeout: 60000
+              },
+              listPerPage: 10
+            },
+            factory: {
+              url: 'https://pizza-factory.cs329.click',
+              apiKey: process.env.FACTORY_API_KEY
+            }
+          };
+
+          fs.writeFileSync(
+            'backend/src/config.js',
+            'module.exports = ' + JSON.stringify(config, null, 2) + ';\n'
+          );
+          NODE
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Start backend
+        working-directory: backend
+        run: |
+          nohup npm start -- 3000 > ../backend.log 2>&1 &
+
+      - name: Wait for backend
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/ -o /dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat backend.log
+          echo "Backend failed to become ready"
+          exit 1
+
       - name: Update pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -41,7 +119,7 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           npm run test:coverage
-          
+
       - name: Update coverage
         run: |
           coverage=$(jq '.total.lines.pct' coverage/coverage-summary.json)
