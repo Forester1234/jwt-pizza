@@ -401,5 +401,3 @@ test('franchise dashboard', async ({ page }) => {
 
   // Finish test to ensure franchise is deleted
 });
-
-// http://localhost:5173/
