@@ -17,7 +17,7 @@ const test = base.extend({
       if (url.startsWith('http://localhost:3000')) {
         const violation = { method: request.method(), url, body: request.postData() };
         violations.push(violation);
-        console.log(`Blocked request to http://localhost:3000 -> ${violation.method} ${violation.url} ${violation.body}`);
+        console.log(`Blocked unexpected request -> ${violation.method} ${violation.url}`);
         await route.abort();
         return;
       }

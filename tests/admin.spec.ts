@@ -329,7 +329,7 @@ async function basicInit(page: Page) {
 }
 
 test("admin can list users", async ({ page }) => {
-  await page.goto("/");
+  await basicInit(page);
 
   // login and check
   await page.getByRole("link", { name: "Login" }).click();
