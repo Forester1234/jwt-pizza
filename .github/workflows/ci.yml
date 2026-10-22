@@ -58,7 +58,6 @@ jobs:
       - name: Build
         run: |
           npm ci && npm run build
-          cp dist/index.html dist/404.html
 
       - name: Configure backend
         env:
