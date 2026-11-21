@@ -129,7 +129,7 @@ jobs:
       - name: Run tests
         run: |
           npx playwright install --with-deps chromium
-          npm run test:coverage
+          VITE_PIZZA_SERVICE_URL=http://localhost:3000 npm run test:coverage
 
       - name: Update coverage
         run: |
