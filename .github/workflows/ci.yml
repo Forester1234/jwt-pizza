@@ -82,6 +82,12 @@ jobs:
             factory: {
               url: 'https://pizza-factory.cs329.click',
               apiKey: process.env.FACTORY_API_KEY
+            },
+            metrics: {
+              source: 'jwt-pizza-ci'
+            },
+            logging: {
+              source: 'jwt-pizza-ci'
             }
           };
 
@@ -98,7 +104,7 @@ jobs:
       - name: Start backend
         working-directory: backend
         run: |
-          nohup npm start -- 3000 > ../backend.log 2>&1 &
+          NODE_ENV=test nohup npm start -- 3000 > ../backend.log 2>&1 &
 
       - name: Wait for backend
         run: |
